@@ -72,6 +72,7 @@ The server uses the official Chat Completions API at
 - thinking: enabled with `clear_thinking: false`
 - response streaming and tool streaming enabled
 - `search_pro_jina` web search with high-content results
+- full 128K output-token ceiling for assistant responses
 
 The browser never receives the API key or ESPN cookies. The assistant receives
 a compact, freshly fetched ESPN snapshot with each question, retains up to 48

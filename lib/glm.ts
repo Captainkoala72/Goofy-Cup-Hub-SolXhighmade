@@ -5,6 +5,8 @@ import type {
 } from "@/lib/types";
 
 const GLM_CHAT_URL = "https://api.z.ai/api/paas/v4/chat/completions";
+const GLM_MAX_OUTPUT_TOKENS = 131_072;
+const GLM_REQUEST_TIMEOUT_MS = 285_000;
 
 type GlmWebSearchResult = {
   title?: string;
@@ -112,14 +114,14 @@ async function* callGlm(
       top_p: 0.95,
       reasoning_effort: "max",
       thinking: { type: "enabled", clear_thinking: false },
-      max_tokens: options?.maxTokens ?? 8_000,
+      max_tokens: options?.maxTokens ?? GLM_MAX_OUTPUT_TOKENS,
       stream: true,
       tool_stream: true,
       tools: [webSearchTool()],
       tool_choice: "auto",
       ...(options?.json ? { response_format: { type: "json_object" } } : {}),
     }),
-    signal: AbortSignal.timeout(110_000),
+    signal: AbortSignal.timeout(GLM_REQUEST_TIMEOUT_MS),
   });
 
   if (!response.ok) {
@@ -213,7 +215,7 @@ export async function generateWeeklyRecap(
   let text = "";
   for await (const event of callGlm(messages, {
     json: true,
-    maxTokens: 6_000,
+    maxTokens: 32_768,
   })) {
     if (event.type === "delta") text += event.content;
   }

@@ -4,7 +4,7 @@ import { streamLeagueAssistant } from "@/lib/glm";
 import { getLeagueSnapshot } from "@/lib/espn";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 const encoder = new TextEncoder();
 
