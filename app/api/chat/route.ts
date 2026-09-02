@@ -1,21 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { askLeagueAssistant } from "@/lib/deepseek";
+import { streamLeagueAssistant } from "@/lib/glm";
 import { getLeagueSnapshot } from "@/lib/espn";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
+
+const encoder = new TextEncoder();
 
 const requestSchema = z.object({
   messages: z
     .array(
       z.object({
         role: z.enum(["user", "assistant"]),
-        content: z.string().trim().min(1).max(4_000),
+        content: z.string().trim().min(1).max(12_000),
       }),
     )
     .min(1)
-    .max(12),
+    .max(48),
 });
 
 const requestBuckets = new Map<string, { count: number; resetAt: number }>();
@@ -49,16 +51,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.DEEPSEEK_API_KEY) {
+    if (!process.env.ZAI_API_KEY) {
       return NextResponse.json(
-        { error: "The assistant is waiting for its DeepSeek API key." },
+        { error: "The assistant is waiting for its Z.ai API key." },
         { status: 503 },
       );
     }
 
     const snapshot = await getLeagueSnapshot();
-    const result = await askLeagueAssistant(parsed.data.messages, snapshot);
-    return NextResponse.json({ answer: result.text, sources: result.sources });
+    const body = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const event of streamLeagueAssistant(
+            parsed.data.messages,
+            snapshot,
+          )) {
+            controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
+          }
+          controller.enqueue(encoder.encode('{"type":"done"}\n'));
+        } catch {
+          controller.enqueue(
+            encoder.encode(
+              `${JSON.stringify({
+                type: "error",
+                error:
+                  "The assistant hit a timeout or upstream error. Try once more.",
+              })}\n`,
+            ),
+          );
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(body, {
+      headers: {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
   } catch {
     return NextResponse.json(
       { error: "The assistant hit a timeout or upstream error. Try once more." },

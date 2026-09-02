@@ -231,7 +231,7 @@ export default async function Home() {
                   <Bot className="size-5" aria-hidden="true" />
                 </span>
                 <p className="mt-5 text-xs font-black uppercase tracking-[0.2em] text-white/60">
-                  DeepSeek · Max reasoning
+                  GLM-5.3 Flash · Max reasoning
                 </p>
                 <h2 className="mt-1 text-2xl font-black tracking-tight">
                   Ask the league assistant

@@ -7,8 +7,9 @@ TypeScript, and Tailwind CSS.
 
 - Live ESPN standings, weekly matchups, schedules, managers, and rosters
 - Team detail pages with starters, bench, scoring, and season schedule
-- A public fantasy assistant powered by `deepseek-v4-flash`
-- Maximum reasoning and DeepSeek's native `web_search` tool on every chat
+- A public fantasy assistant powered by `glm-5.3-flash`
+- Maximum reasoning, token streaming, tool streaming, and high-content live web
+  search on every chat
 - One-click team names that insert at the current chat cursor position
 - Automatic weekly recap generation after Monday Night Football
 - A Neon Postgres archive for the Goofy Gazette
@@ -53,27 +54,32 @@ The ESPN integration is intentionally isolated in `lib/espn.ts`. ESPN's league
 API is undocumented, so the site falls back to a setup preview and displays a
 warning if ESPN changes the response or the cookies expire.
 
-## 3. Connect DeepSeek
+## 3. Connect Z.ai
 
-Create an API key in the DeepSeek Platform and set:
+Create an API key in the Z.ai Platform and set:
 
 ```dotenv
-DEEPSEEK_API_KEY=YOUR_KEY
+ZAI_API_KEY=YOUR_KEY
 ```
 
-The server uses the official Responses API at
-`https://api.deepseek.com/responses` with:
+The server uses the official Chat Completions API at
+`https://api.z.ai/api/paas/v4/chat/completions` with:
 
-- model: `deepseek-v4-flash`
+- model: `glm-5.3-flash`
+- temperature: `1`
+- top-p: `0.95`
 - reasoning effort: `max`
-- tool: `web_search`
+- thinking: enabled with `clear_thinking: false`
+- response streaming and tool streaming enabled
+- `search-prime` web search with high-content results
 
 The browser never receives the API key or ESPN cookies. The assistant receives
-a compact, freshly fetched ESPN snapshot with each question and uses web search
-for current NFL news, injuries, weather, and depth-chart context.
+a compact, freshly fetched ESPN snapshot with each question, retains up to 48
+conversation messages, and uses web search for current NFL news, injuries,
+weather, practice reports, and depth-chart context.
 
-DeepSeek Responses API guide:
-https://api-docs.deepseek.com/guides/responses_api/
+GLM-5.3 Flash guide:
+https://docs.z.ai/guides/vlm/glm-5.3-flash
 
 ## 4. Add the managed database
 
@@ -104,7 +110,7 @@ Authorization header. The route:
 1. refreshes ESPN data;
 2. finds the latest completed week;
 3. skips the run if that week already has a story;
-4. generates a grounded recap with DeepSeek; and
+4. generates a grounded recap with GLM-5.3 Flash; and
 5. saves it to Neon for the Weekly Stories page.
 
 The job runs on production deployments. It is idempotent, so retries do not
@@ -122,7 +128,7 @@ production deployment:
 | `ESPN_SEASON_ID` | Yes | No |
 | `ESPN_SWID` | Yes | Yes |
 | `ESPN_S2` | Yes | Yes |
-| `DEEPSEEK_API_KEY` | Yes | Yes |
+| `ZAI_API_KEY` | Yes | Yes |
 | `DATABASE_URL` | Yes | Yes |
 | `CRON_SECRET` | Yes | Yes |
 
@@ -141,7 +147,7 @@ npm run start     # run the production build
 ## Server routes
 
 - `GET /api/league` — sanitized ESPN league snapshot
-- `POST /api/chat` — DeepSeek fantasy assistant
+- `POST /api/chat` — streaming GLM fantasy assistant
 - `GET /api/posts` — published weekly stories
 - `GET /api/cron/weekly-recap` — protected Vercel scheduled job
 

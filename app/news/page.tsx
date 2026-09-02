@@ -31,7 +31,7 @@ export default async function NewsPage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
             <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5">
-              <Bot className="mr-1.5 inline size-3" /> DeepSeek V4 Flash
+              <Bot className="mr-1.5 inline size-3" /> GLM-5.3 Flash
             </span>
             <span className="rounded-full border border-white/12 bg-white/8 px-3 py-1.5">
               <CalendarClock className="mr-1.5 inline size-3" /> Tuesdays · 13:00 UTC

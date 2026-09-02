@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateWeeklyRecap } from "@/lib/deepseek";
+import { generateWeeklyRecap } from "@/lib/glm";
 import { getLeagueSnapshot } from "@/lib/espn";
 import { getWeeklyPost, saveWeeklyPost } from "@/lib/db";
 

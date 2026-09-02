@@ -97,6 +97,11 @@ export function AssistantClient({ league }: { league: LeagueSnapshot }) {
     setBusy(true);
     setError("");
 
+    const assistantId = crypto.randomUUID();
+    let assistantStarted = false;
+    let streamedText = "";
+    let streamedSources: ChatSource[] = [];
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -104,30 +109,74 @@ export function AssistantClient({ league }: { league: LeagueSnapshot }) {
         body: JSON.stringify({
           messages: nextMessages
             .filter((message) => message.id !== "welcome")
-            .slice(-12)
+            .slice(-48)
             .map(({ role, content: messageContent }) => ({
               role,
               content: messageContent,
             })),
         }),
       });
-      const payload = (await response.json()) as {
-        answer?: string;
-        sources?: ChatSource[];
-        error?: string;
-      };
-      if (!response.ok || !payload.answer) {
+
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
         throw new Error(payload.error ?? "The assistant could not answer.");
       }
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: payload.answer as string,
-          sources: payload.sources,
-        },
-      ]);
+      if (!response.body) throw new Error("The assistant returned no stream.");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const lines = buffer.split(/\r?\n/);
+        buffer = done ? "" : (lines.pop() ?? "");
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line) as
+            | { type: "delta"; content: string }
+            | { type: "sources"; sources: ChatSource[] }
+            | { type: "done" }
+            | { type: "error"; error: string };
+
+          if (event.type === "error") throw new Error(event.error);
+          if (event.type === "sources") streamedSources = event.sources;
+          if (event.type === "delta") streamedText += event.content;
+          if (event.type === "done") continue;
+
+          if (!assistantStarted && streamedText) {
+            assistantStarted = true;
+            setMessages((current) => [
+              ...current,
+              {
+                id: assistantId,
+                role: "assistant",
+                content: streamedText,
+                sources: streamedSources,
+              },
+            ]);
+          } else if (assistantStarted) {
+            setMessages((current) =>
+              current.map((message) =>
+                message.id === assistantId
+                  ? {
+                      ...message,
+                      content: streamedText,
+                      sources: streamedSources,
+                    }
+                  : message,
+              ),
+            );
+          }
+        }
+        if (done) break;
+      }
+
+      if (!streamedText.trim()) {
+        throw new Error("The assistant returned an empty answer.");
+      }
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -214,10 +263,10 @@ export function AssistantClient({ league }: { league: LeagueSnapshot }) {
               </h1>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="size-3" /> DeepSeek V4 Flash · Max
+                  <Sparkles className="size-3" /> GLM-5.3 Flash · Max
                 </span>
                 <span className="flex items-center gap-1">
-                  <Globe2 className="size-3" /> Web search on
+                  <Globe2 className="size-3" /> Live search · Streaming
                 </span>
               </div>
             </div>
@@ -352,7 +401,7 @@ export function AssistantClient({ league }: { league: LeagueSnapshot }) {
                 placeholder="Ask about a team, player, trade, or matchup…"
                 aria-label="Message the fantasy assistant"
                 rows={1}
-                maxLength={4_000}
+                maxLength={12_000}
                 disabled={busy}
                 className="max-h-40 min-h-11 resize-none border-0 px-3 py-2.5 text-base shadow-none focus-visible:ring-0"
               />
