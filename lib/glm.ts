@@ -64,7 +64,7 @@ function webSearchTool() {
     type: "web_search",
     web_search: {
       enable: true,
-      search_engine: "search-prime",
+      search_engine: "search_pro_jina",
       search_result: true,
       count: 10,
       search_recency_filter: "noLimit",

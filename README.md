@@ -71,7 +71,7 @@ The server uses the official Chat Completions API at
 - reasoning effort: `max`
 - thinking: enabled with `clear_thinking: false`
 - response streaming and tool streaming enabled
-- `search-prime` web search with high-content results
+- `search_pro_jina` web search with high-content results
 
 The browser never receives the API key or ESPN cookies. The assistant receives
 a compact, freshly fetched ESPN snapshot with each question, retains up to 48

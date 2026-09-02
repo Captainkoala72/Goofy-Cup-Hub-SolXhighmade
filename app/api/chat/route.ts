@@ -69,7 +69,8 @@ export async function POST(request: NextRequest) {
             controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
           }
           controller.enqueue(encoder.encode('{"type":"done"}\n'));
-        } catch {
+        } catch (error) {
+          console.error("GLM assistant stream failed", error);
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
