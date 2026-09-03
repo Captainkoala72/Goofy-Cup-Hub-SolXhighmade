@@ -52,7 +52,7 @@ export default async function Home() {
               </span>
             </div>
             <h1 className="max-w-3xl text-4xl font-black tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-              The league table, with a little less dignity.
+              A Smart Hub for a Goofy League.
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/66 sm:text-lg">
               Eight teams. One trophy. Every matchup, roster, and weekly story
