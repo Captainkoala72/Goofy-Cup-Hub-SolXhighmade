@@ -42,6 +42,15 @@ const suggestions = [
   "Who has the strongest roster right now?",
   "Give me three waiver priorities for this week.",
   "Preview this week's closest matchup.",
+  "Rank every team for the rest of the season.",
+  "Set the best starting lineup for each team this week.",
+  "Which bench players deserve a starting spot this week?",
+  "Find three fair trades that would help both teams.",
+  "Who are the best buy-low and sell-high players in our league?",
+  "Flag every starter with an injury or role concern.",
+  "Project this week's highest-scoring team.",
+  "Which team has the clearest path to the championship?",
+  "Give every manager one move to improve their roster.",
 ];
 
 function starterMessage(isDemo: boolean): DisplayMessage {
