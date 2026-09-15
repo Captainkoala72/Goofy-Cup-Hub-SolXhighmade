@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Bot, CalendarClock, Newspaper, Sparkles } from "lucide-react";
 import { getWeeklyPosts } from "@/lib/db";
+import { ChatMarkdown } from "@/components/chat-markdown";
 
 export const metadata: Metadata = {
   title: "Weekly Stories",
@@ -59,8 +60,8 @@ export default async function NewsPage() {
                   {post.excerpt}
                 </p>
               </div>
-              <div className="whitespace-pre-wrap px-6 py-6 text-base leading-8 text-[#39324d] sm:px-8 sm:py-8">
-                {post.body}
+              <div className="px-6 py-6 text-base leading-8 text-[#39324d] sm:px-8 sm:py-8">
+                <ChatMarkdown content={post.body} />
               </div>
             </article>
           ))}
